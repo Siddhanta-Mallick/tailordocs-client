@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
 /* Keep field dimensions intentional inside the fixed split workspace. */
 textarea {
   resize: none;
@@ -15,4 +17,223 @@ fieldset > textarea {
   color: #254A36;
   font-size: 13px;
   line-height: 1.45;
+}
+
+.add-entry,
+.remove-entry {
+  border: 1px solid #9eaa90;
+  border-radius: 5px;
+  background: #fffaf0;
+  padding: 7px 11px;
+  color: #31573c;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.add-entry:hover,
+.add-entry:focus-visible {
+  border-color: #31573c;
+  background: #edf1e7;
+}
+
+.remove-entry {
+  border-color: #c9a996;
+  color: #884929;
+}
+
+.remove-entry:hover,
+.remove-entry:focus-visible {
+  border-color: #884929;
+  background: #f5e8df;
+}
+
+.entry-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.project-bullets {
+  margin-top: 12px;
+}
+
+.project-bullets > p {
+  margin: 0 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bullet-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 8px;
+}
+
+.bullet-field textarea {
+  width: 100%;
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid #c9c1b2;
+  border-radius: 5px;
+  background: #fffaf0;
+  color: #254A36;
+  font-size: 13px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+/* Mirror Jake's compact letter-paper LaTeX layout in the live preview. */
+.resume-paper {
+  width: 100%;
+  max-width: 650px;
+  min-height: 0;
+  aspect-ratio: 8.5 / 11;
+  padding: 38px;
+  background: #fff;
+  color: #000;
+  font-family: 'STIX Two Text', 'Times New Roman', serif;
+  font-size: 11px;
+  line-height: 1.38;
+  text-align: left;
+}
+
+.paper-head {
+  display: block;
+  padding: 0;
+  border: 0;
+  text-align: center;
+}
+
+.paper-head h2 {
+  margin: 0 0 1px;
+  font-size: 27px;
+  font-weight: 700;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.paper-head .paper-contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 5px;
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.paper-contact a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 1px;
+}
+
+.resume-paper section h3 {
+  margin: 13px 0 6px;
+  padding: 0 0 1px;
+  border-bottom: 1px solid #000;
+  font-size: 13px;
+  font-weight: 400;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.paper-objective,
+.skill-line {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.38;
+}
+
+.paper-entry,
+.skill-line,
+.paper-project-heading {
+  margin-left: 12px;
+  margin-right: 3px;
+}
+
+.paper-entry {
+  margin-top: 2px;
+  margin-bottom: 5px;
+}
+
+.paper-entry-line,
+.paper-project-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 12px;
+  align-items: baseline;
+}
+
+.paper-entry-line > :last-child,
+.paper-project-heading > :last-child {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.paper-entry-detail {
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.skill-line + .skill-line {
+  margin-top: 3px;
+}
+
+.paper-project {
+  margin: 0 0 7px;
+  font-size: 10.5px;
+  line-height: 1.36;
+}
+
+.paper-project-heading p {
+  min-width: 0;
+  margin: 0;
+}
+
+.paper-project-heading > span {
+  font-size: 11px;
+}
+
+.paper-project ul {
+  margin: 3px 3px 0 12px;
+  padding-left: 18px;
+}
+
+.paper-project li {
+  margin: 1px 0;
+  padding-left: 1px;
+}
+
+.paper-project li::marker {
+  font-size: 0.62em;
+}
+
+@media (max-width: 620px) {
+  .resume-paper {
+    padding: 24px;
+  }
+
+  .paper-head h2 {
+    font-size: 23px;
+  }
+
+  .paper-head .paper-contact {
+    font-size: 9px;
+  }
+
+  .contact-separator {
+    display: none;
+  }
 }
