@@ -5,6 +5,53 @@ textarea {
   resize: none;
 }
 
+.auth-gate {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: min(100%, 420px);
+  padding: 38px;
+  border: 1px solid #c9c1b2;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: #254a36;
+  box-shadow: 0 18px 45px rgb(37 74 54 / 12%);
+}
+
+.auth-card .brand {
+  margin-bottom: 34px;
+}
+
+.auth-card h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.auth-card p {
+  margin: 12px 0 24px;
+  line-height: 1.5;
+}
+
+.tailor-button {
+  margin-top: 18px;
+}
+
+.tailor-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.request-error {
+  margin: 18px 0 0;
+  color: #884929;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 fieldset > textarea {
   display: block;
   width: 100%;

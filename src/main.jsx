@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { AuthenticationRequiredError, accessToken, clearSession, initializeSession, signIn, signOut } from './auth';
 import './styles.css';
 import './overrides.css';
 
@@ -12,6 +13,7 @@ const initialResume = {
 };
 
 const initialDescription = 'Figma is looking for a product designer to make creative work more collaborative. You will partner with researchers, engineers, and product leads to set product direction, turn complex workflows into clear interactions, and raise the quality bar for millions of people making things together.';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 function LeafMark() { return <span className="leaf-mark" aria-hidden="true"><i /><i /><i /></span>; }
 function setAt(items, index, key, value) { return items.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item); }
 
@@ -40,8 +42,8 @@ function ResumePaper({ resume }) {
   </article>;
 }
 
-function JobDescription({ description, setDescription }) {
-  return <div className="panel"><div className="panel-intro"><h2>Bring the role into focus.</h2><p>Paste the final job description you want this resume to answer. This layout intentionally does not scrape job URLs.</p></div><label className="field-label">Job description<textarea className="job-description" value={description} onChange={event => setDescription(event.target.value)} /></label><div className="verification"><span>✓</span><p><b>Ready to tailor</b><br />Use this final text when you generate or refine the resume.</p></div></div>;
+function JobDescription({ description, setDescription, onTailor, isTailoring, error }) {
+  return <div className="panel"><div className="panel-intro"><h2>Bring the role into focus.</h2><p>Paste the final job description you want this resume to answer. This layout intentionally does not scrape job URLs.</p></div><label className="field-label">Job description<textarea className="job-description" value={description} onChange={event => setDescription(event.target.value)} /></label><div className="verification"><span>✓</span><p><b>Ready to tailor</b><br />Use this final text when you generate or refine the resume.</p></div>{error && <p className="request-error" role="alert">{error}</p>}<button className="primary tailor-button" type="button" onClick={onTailor} disabled={isTailoring}>{isTailoring ? 'Tailoring resume...' : 'Tailor resume'}</button></div>;
 }
 
 function EditDetails({ resume, setResume }) {
@@ -71,6 +73,72 @@ function App() {
   const [resume, setResume] = useState(initialResume);
   const [description, setDescription] = useState(initialDescription);
   const [prompt, setPrompt] = useState('');
-  return <main className="workspace"><header className="topbar"><div className="brand"><LeafMark /> Tailorwood</div><div className="workspace-status"><b>Figma</b><span>Product designer</span><em>93 fit</em></div><div><button className="quiet">Save draft</button><button className="primary">Save to history</button></div></header><div className="workspace-body"><section className="editor"><div className="editor-tabs" role="tablist">{['Job description', 'Edit details', 'Custom prompt'].map(item => <button key={item} className={tab === item ? 'active' : ''} role="tab" aria-selected={tab === item} onClick={() => setTab(item)}>{item}</button>)}</div>{tab === 'Job description' && <JobDescription description={description} setDescription={setDescription} />}{tab === 'Edit details' && <EditDetails resume={resume} setResume={setResume} />}{tab === 'Custom prompt' && <CustomPrompt prompt={prompt} setPrompt={setPrompt} />}</section><section className="preview-stage"><div className="preview-toolbar"><p>Live preview <span>Unsaved changes</span></p><button>Download PDF</button></div><ResumePaper resume={resume} /><p className="preview-caption">The final PDF is generated from this edited resume.</p></section></div></main>;
+  const [isTailoring, setIsTailoring] = useState(false);
+  const [tailoringError, setTailoringError] = useState('');
+
+  async function tailorResume() {
+    if (!description.trim()) {
+      setTailoringError('Paste a job description before tailoring your resume.');
+      return;
+    }
+
+    setIsTailoring(true);
+    setTailoringError('');
+    try {
+      const token = await accessToken();
+      const response = await fetch(`${apiBaseUrl}/api/tailor/resume`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_description: description, baseline_resume: resume }),
+      });
+      const body = await response.json().catch(() => null);
+      if (response.status === 401) {
+        clearSession();
+        await signIn();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error(body?.detail || 'Unable to tailor your resume. Please try again.');
+      }
+      setResume(body);
+      setTab('Edit details');
+    } catch (error) {
+      if (error instanceof AuthenticationRequiredError) {
+        clearSession();
+        await signIn();
+        return;
+      }
+      setTailoringError(error instanceof Error ? error.message : 'Unable to tailor your resume. Please try again.');
+    } finally {
+      setIsTailoring(false);
+    }
+  }
+
+  return <main className="workspace"><header className="topbar"><div className="brand"><LeafMark /> Tailorwood</div><div className="workspace-status"><b>Figma</b><span>Product designer</span><em>93 fit</em></div><div><button className="quiet">Save draft</button><button className="quiet" type="button" onClick={signOut}>Sign out</button><button className="primary">Save to history</button></div></header><div className="workspace-body"><section className="editor"><div className="editor-tabs" role="tablist">{['Job description', 'Edit details', 'Custom prompt'].map(item => <button key={item} className={tab === item ? 'active' : ''} role="tab" aria-selected={tab === item} onClick={() => setTab(item)}>{item}</button>)}</div>{tab === 'Job description' && <JobDescription description={description} setDescription={setDescription} onTailor={tailorResume} isTailoring={isTailoring} error={tailoringError} />}{tab === 'Edit details' && <EditDetails resume={resume} setResume={setResume} />}{tab === 'Custom prompt' && <CustomPrompt prompt={prompt} setPrompt={setPrompt} />}</section><section className="preview-stage"><div className="preview-toolbar"><p>Live preview <span>Unsaved changes</span></p><button>Download PDF</button></div><ResumePaper resume={resume} /><p className="preview-caption">The final PDF is generated from this edited resume.</p></section></div></main>;
 }
-createRoot(document.getElementById('root')).render(<App />);
+
+function AuthenticationGate() {
+  const [status, setStatus] = useState('loading');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    initializeSession().then(session => setStatus(session ? 'authenticated' : 'anonymous')).catch(error => {
+      clearSession();
+      setError(error instanceof Error ? error.message : 'Cognito sign-in could not be completed.');
+      setStatus('anonymous');
+    });
+  }, []);
+
+  async function beginSignIn() {
+    try {
+      await signIn();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Cognito sign-in could not be started.');
+    }
+  }
+
+  if (status === 'authenticated') return <App />;
+  return <main className="auth-gate"><section className="auth-card"><div className="brand"><LeafMark /> Tailorwood</div><h1>{status === 'loading' ? 'Checking your session' : 'Sign in to Tailorwood'}</h1><p>{status === 'loading' ? 'Connecting to your secure workspace.' : 'Use your Cognito account to access your resume workspace.'}</p>{error && <p className="request-error" role="alert">{error}</p>}{status !== 'loading' && <button className="primary" type="button" onClick={beginSignIn}>Sign in</button>}</section></main>;
+}
+
+createRoot(document.getElementById('root')).render(<AuthenticationGate />);
